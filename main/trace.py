@@ -4,7 +4,6 @@ import os
 import time
 import traceback
 
-import IPython
 from django.conf import settings
 
 try:
@@ -145,44 +144,8 @@ def trace_settings():
 
     try:
         # Questa cosa infastidisce "runtests.py" e pertanto intercettiamo eventuali exceptions
-        names = [
-            "DEBUG",
-            # "HTTP_PROTOCOL",
-            # "HOSTNAME",
-            'ALLOWED_HOSTS',
-            "STATIC_URL",
-            "MEDIA_URL",
-            "MEDIA_URL",
-            "STATIC_ROOT",
-            "MEDIA_ROOT",
-            "LOG_ROOT",
-            "LOG_FILENAME",
-            "LOG_LEVEL",
-            # "CACHE_URL",
-            # "REDIS_URL",
-            # "UNIDRV_REDIS_URL",
-            # "PROJECT_NAME",
-            # "PROJECT_INSTANCE",
-            # # "CORS_ALLOWED_ORIGINS",
-            "SESSION_COOKIE_NAME",
-            "CSRF_TRUSTED_ORIGINS",
-            "CSRF_COOKIE_DOMAIN",
-        ]
-
-
-        items = {k: getattr(settings, k) for k in names}
-        db = getattr(settings, "DATABASES")["default"]
-        items.update({
-            "DATABASE_ENGINE": db['ENGINE'],
-            "DATABASE_NAME": db['NAME'],
-        })
-
-        # db = settings.get("DATABASES")["default"]
-        # items.update(
-        #     {"DATABASE": f"postgresql://{db['USER']}:*******@{db['HOST']}/{db['NAME']}"}
-        # )
-
-        trace_items(items, title="Settings", subtitle="")
+        from .settings.list_main_settings import list_main_settings
+        trace_items(list_main_settings(), title="Settings", subtitle="")
 
     except Exception as e:
         print("ERROR: " + str(e))
