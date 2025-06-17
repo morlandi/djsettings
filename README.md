@@ -5,39 +5,39 @@
 
 ## Project layout
 
-Il progetto prevede:
+The project includes:
 
-- un folder `main` in cui viene conservato il progetto
-- un folfer `myapp` che contiene una semplice applicazione
-- `myapp` introduce il logger `logging.getLogger('myapp')` che verra' utilizzato per verificare il comportamento nel sistema di logging
-- un semplice script `runtests.py`per eseguire gli unit test in modo controllato e prevedibile (ma senza introdurre ulteriori dipendenze)
-- un folder locale di lavoro `data` escluso dal repository
+- a `main` folder where the project is stored
+- a `myapp` folder containing a simple application
+- `myapp` introduces the logger `logging.getLogger(‘myapp’)`, which will be used to verify behavior in the logging system
+- a simple `runtests.py` script to run unit tests in a controlled and predictable manner (but without introducing additional dependencies)
+- a local working folder `data` excluded from the repository
 
+The default database is SQlite, specifically “./data/db/db.sqlite3,” so it is necessary to ensure that the folder “./data/db” exists, even if it is not actually used.
 
+```bash
+mkdir ./data/db
+```
 
-Il database previsto di default e' SQlite, e precisamente "./data/db/db.sqlite3" per cui e' necessario garantire l'esistenza del folder "./data/db", anche se poi di fatto inutilizzato.
-
-La maggior parte dei settings proposti da Django sono inutilizzati in questo progetto minimale, e possono essere commentati
+Most of the settings proposed by Django are unused in this minimal project and can be commented out.
 
 
 
 ## Settings files
 
-
-
-I files relativi ai settings, raccolti in un unico modulo `main.settings` , hanno il ruolo di seguito descritto:
+The files relating to settings, collected in a single module `main.settings`, have the role described below
 
 ### setting.py
 
-Contiene la lista di tutti i defaults del progetto, e viene di norma incluso da altri files che provvedono a integrarlo e/o fornire overrides di alcune variabili
+Contains a list of all project defaults, and is normally included by other files that integrate it and/or provide overrides for certain variables.
 
 ### local.py
 
-**Di norma non incluso nel repository**, e' il file utilizzato localmente per caratterizzare le necessita' della specifica istanza;
+**Not normally included in the repository**, this is the file used locally to characterize the needs of the specific instance;
 
-normalmente conterra' `DEBUG=False`(almeno in produzione) e le specifiche del database utilizzato dall'istanza.
+it will normally contain `DEBUG=False` (at least in production) and the specifications of the database used by the instance.
 
-Esempio minimale:
+Minimal example:
 
 ```python
 from main.settings.settings import *
@@ -49,3 +49,139 @@ LOG_LEVEL = "DEBUG"
 TRACE_SETTINGS_ENABLED = False
 ```
 
+### test_settings.py
+
+The `runtests.py` script refers to this script to set the appropriate settings when running unit tests.
+
+
+### \_\_init\_\_.py
+
+This is where the magic happens.
+
+The default setting for the project, without requiring any specific configuration, is `main.settings`, which involves executing `main/settings/__init__.py`, which in turn:
+
+- imports main.settings.local.py under normal conditions
+- unless it detects that the execution context is that of unit testing
+- if it does not find `local.py`, it triggers an exception
+- if desired, we can kindly provide a `local_example.py` as an example
+
+### extra_settings.py
+
+Optionally imported at the end; they are an opportunity for the deployment system to set specific configurations based on the individual instance.
+
+## Logging configuration
+
+The use of settings.LOGGING can be convenient in simple situations, but problematic in cases where `LOGGING` itself depends on values set in the settings; a situation that can be useful in practice.
+
+For this reason, we have chosen to disable “static” LOGGING:
+
+file `main/settings/settings/py`:
+
+```python
+# Prevent Django from automatically applying the default logging configuration
+LOGGING_CONFIG = None
+```
+
+postponing its setting to the ready() method, which is only executed when all settings have been fully loaded:
+
+file `main/apps.py`:
+
+```python
+class MainAppConfig(AppConfig):
+
+    name = "main"
+    verbose_name = "main"
+    _logging_configured = False
+
+    def ready(self):
+        if not self._logging_configured:
+            print('*********** setup_logging() ***************')
+            setup_logging()
+            self._logging_configured = True
+```
+
+being, for example:
+
+file `main/settings/logging.py`
+
+```python
+def setup_logging(verbose=None):
+    """
+    Use to set LOGGING settings variable;
+    paramters:
+
+        verbose: if True, force all loggers to use the console
+        log_level: default value for log_level .. you can always apply a specific
+                   level to individual loggers and/or handler below where appropriate
+
+    Use AT THE VERY END of your settings file;
+    if multiple files are involved (each one importing the other)
+    use in the most external wrapper.
+
+    from .logging import get_logging_config
+    LOGGING = get_logging_config(
+        verbose=True,
+        log_level=LOG_LEVEL,
+        log_root=LOG_ROOT,
+        log_filename=LOG_FILENAME)
+    """
+
+    if verbose is None:
+        verbose = settings.DEBUG
+
+    assert settings.LOGGING_CONFIG is None, "Prevent Django from automatically applying the default logging configuration"
+    log_level = settings.LOG_LEVEL
+    log_filepath = os.path.join(settings.LOG_ROOT, settings.LOG_FILENAME)
+    os.makedirs(settings.LOG_ROOT, exist_ok=True)
+
+    data = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        "formatters": {
+            "verbose": {"format": "%(asctime)s|%(levelname)s|%(name)s| %(message)s"},
+            "simple": {"format": "%(levelname)s %(message)s"},
+        },
+        "handlers": {
+            "console": {
+                "level": log_level,
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+            },
+            "logfile": {
+                "level": log_level,
+                "class": "logging.handlers.RotatingFileHandler",
+                "maxBytes": 1024 * 1204 * 1,
+                "backupCount": 10,
+                "filename": log_filepath,
+                "formatter": "verbose",
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': log_level,
+        },
+        'loggers': {
+            'myapp': {
+                'handlers': ['logfile', ],
+                'level': log_level,
+                'propagate': False,
+            },
+            "django": {
+                "handlers": ["logfile", ],
+                "level": "WARNING",
+                "propagate": True,
+            },
+        },
+    }
+
+    if verbose:
+        # make all loggers use the console.
+        for logger in data["loggers"].values():
+            handlers = logger["handlers"]
+            if not "console" in handlers:
+                handlers.append("console")
+
+    logging.config.dictConfig(data)
+```
+
+As an additional aid, `setup_logging()` provides the `verbose` parameter, which allows you to optionally assign the `console` handler to all `loggers` to facilitate interactive debugging.

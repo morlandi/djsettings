@@ -13,7 +13,7 @@ else:
     try:
         from main.settings.local import *
     except ModuleNotFoundError:
-        from main.settings.settings import *
+        raise Exception('Missing file "main/settings/local.py". You can start from "main/settings/local_example.py" and adapt it to your own needs')
 
 # Poor man debugging when DEBUG=False
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
