@@ -13,19 +13,19 @@ The project includes:
 - a simple `runtests.py` script to run unit tests in a controlled and predictable manner (but without introducing additional dependencies)
 - a local working folder `data` excluded from the repository
 
-The default database is SQlite, specifically “./data/db/db.sqlite3,” so it is necessary to ensure that the folder “./data/db” exists, even if it is not actually used.
+The default database is SQlite, specifically “./data/db/db.sqlite3,” so it is necessary to ensure that the folder “./data/db” exists, even if the database itself is not actually used.
 
 ```bash
 mkdir ./data/db
 ```
 
-Most of the settings proposed by Django are unused in this minimal project and can be commented out.
+Most of the settings proposed by Django are unused in this minimal project, and have been commented out.
 
 
 
 ## Settings files
 
-The files relating to settings, collected in a single module `main.settings`, have the role described below
+The files relating to settings, collected in a single module `main.settings`, have the role described below.
 
 ### setting.py
 
@@ -47,6 +47,17 @@ ALLOWED_HOSTS = ['*', ]
 
 LOG_LEVEL = "DEBUG"
 TRACE_SETTINGS_ENABLED = False
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": PROJECT_INSTANCE,
+        "USER": PROJECT_INSTANCE,
+        "PASSWORD": "*****************************", # See deployment
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
+    }
+}
 ```
 
 ### test_settings.py
@@ -58,16 +69,16 @@ The `runtests.py` script refers to this script to set the appropriate settings w
 
 This is where the magic happens.
 
-The default setting for the project, without requiring any specific configuration, is `main.settings`, which involves executing `main/settings/__init__.py`, which in turn:
+The default setting for the project, without applying any specific configuration, is `main.settings`, which involves executing `main/settings/__init__.py`, which in turn:
 
 - imports main.settings.local.py under normal conditions
 - unless it detects that the execution context is that of unit testing
 - if it does not find `local.py`, it triggers an exception
-- if desired, we can kindly provide a `local_example.py` as an example
+- if desired, we can kindly provide a `local_example.py` as an example to start with
 
 ### extra_settings.py
 
-Optionally imported at the end; they are an opportunity for the deployment system to set specific configurations based on the individual instance.
+Optionally imported at the end; they are an opportunity for the deployment system to set specific configurations on a per-instance base.
 
 ## Logging configuration
 
@@ -82,7 +93,7 @@ file `main/settings/settings/py`:
 LOGGING_CONFIG = None
 ```
 
-postponing its setting to the ready() method, which is only executed when all settings have been fully loaded:
+postponing the logging configuration to the AppConfig.ready() method, which is executed when all settings have been fully loaded:
 
 file `main/apps.py`:
 

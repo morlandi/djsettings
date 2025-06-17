@@ -7,6 +7,17 @@ ALLOWED_HOSTS = ['*', ]
 LOG_LEVEL = "DEBUG"
 TRACE_SETTINGS_ENABLED = True
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": PROJECT_INSTANCE,
+#         "USER": PROJECT_INSTANCE,
+#         "PASSWORD": "*****************************", # See deployment
+#         "HOST": "127.0.0.1",
+#         "PORT": "5432",
+#     }
+# }
+
 # discard email messages
 EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
 
