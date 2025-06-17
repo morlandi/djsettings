@@ -22,3 +22,6 @@ QUERYCOUNT = {
     "RESPONSE_HEADER": "X-DjangoQueryCount-Count",
     "DISPLAY_DUPLICATES": 0,
 }
+
+# discard email messages
+EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
