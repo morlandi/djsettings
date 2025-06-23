@@ -13,7 +13,7 @@ class SampleTestCase(TransactionTestCase):
         main_settings = list_main_settings()
         print(json.dumps(main_settings, indent=2))
 
-        logger = logging.getLogger("exchange_connector")
+        logger = logging.getLogger("myapp")
         print("LEVEL:", logger.getEffectiveLevel())
         print("HANDLERS:", logger.handlers)
         print("PROPAGATE:", logger.propagate)
