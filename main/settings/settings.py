@@ -127,16 +127,19 @@ USE_TZ = True
 DATA_ROOT = BASE_DIR / "data"
 
 STATIC_URL = 'static/'
-STATIC_ROOT = DATA_ROOT / "static"
+STATIC_ROOT = str(DATA_ROOT / "static")
 MEDIA_URL = 'media/'
-MEDIA_ROOT = DATA_ROOT / "media"
+MEDIA_ROOT = str(DATA_ROOT / "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+################################################################################
+# LOGGING
 
+LOG_TO_CONSOLE = None # if None, will be evaluated ad DEBUG
 LOG_LEVEL = "INFO"
 LOG_ROOT = DATA_ROOT / "logs"
 LOG_FILENAME = "djsettings.log"

@@ -106,7 +106,6 @@ class MainAppConfig(AppConfig):
 
     def ready(self):
         if not self._logging_configured:
-            print('*********** setup_logging() ***************')
             setup_logging()
             self._logging_configured = True
 ```
@@ -116,29 +115,24 @@ being, for example:
 file `main/settings/logging.py`
 
 ```python
-def setup_logging(verbose=None):
+def setup_logging():
     """
-    Use to set LOGGING settings variable;
-    paramters:
+    Used to setup logging with logging.config.dictConfig(),
+    while the LOGGING variable has been excluded as follows:
 
-        verbose: if True, force all loggers to use the console
-        log_level: default value for log_level .. you can always apply a specific
-                   level to individual loggers and/or handler below where appropriate
+        # Prevent Django from automatically applying the default logging configuration
+        LOGGING_CONFIG = None
 
-    Use AT THE VERY END of your settings file;
-    if multiple files are involved (each one importing the other)
-    use in the most external wrapper.
+    The use of settings.LOGGING can be convenient in simple situations,
+    but problematic in cases where `LOGGING` itself depends on values set in the settings.
 
-    from .logging import get_logging_config
-    LOGGING = get_logging_config(
-        verbose=True,
-        log_level=LOG_LEVEL,
-        log_root=LOG_ROOT,
-        log_filename=LOG_FILENAME)
+
+    If settings.LOG_TO_CONSOLE is True, force all loggers to use the console
     """
 
-    if verbose is None:
-        verbose = settings.DEBUG
+    force_log_to_console = settings.LOG_TO_CONSOLE
+    if force_log_to_console is None:
+        force_log_to_console = settings.DEBUG
 
     assert settings.LOGGING_CONFIG is None, "Prevent Django from automatically applying the default logging configuration"
     log_level = settings.LOG_LEVEL
@@ -185,7 +179,7 @@ def setup_logging(verbose=None):
         },
     }
 
-    if verbose:
+    if force_log_to_console:
         # make all loggers use the console.
         for logger in data["loggers"].values():
             handlers = logger["handlers"]
@@ -195,4 +189,6 @@ def setup_logging(verbose=None):
     logging.config.dictConfig(data)
 ```
 
-As an additional aid, `setup_logging()` provides the `verbose` parameter, which allows you to optionally assign the `console` handler to all `loggers` to facilitate interactive debugging.
+
+As an additional aid, `setup_logging()` uses the settings.LOG_TO_CONSOLE variable
+to optionally assign the `console` handler to all `loggers` to facilitate interactive debugging.

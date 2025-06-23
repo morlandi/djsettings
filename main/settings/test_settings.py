@@ -1,6 +1,6 @@
 print("\x1b[1;37;44m %s \x1b[1;39;49m" % "import main.settings.test_settings")
 from main.settings.settings import *
-MEDIA_ROOT = DATA_ROOT / "test_media"
+MEDIA_ROOT = str(DATA_ROOT / "test_media")
 
 DEBUG = False
 LOG_LEVEL = "DEBUG"

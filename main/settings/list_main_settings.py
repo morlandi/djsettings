@@ -16,6 +16,7 @@ def list_main_settings():
         "MEDIA_URL",
         "STATIC_ROOT",
         "MEDIA_ROOT",
+        "LOG_TO_CONSOLE",
         "LOG_ROOT",
         "LOG_FILENAME",
         "LOG_LEVEL",

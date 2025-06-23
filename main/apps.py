@@ -14,7 +14,6 @@ class MainAppConfig(AppConfig):
 
     def ready(self):
         if not self._logging_configured:
-            print('*********** setup_logging() ***************')
             setup_logging()
             self._logging_configured = True
         trace_settings()
